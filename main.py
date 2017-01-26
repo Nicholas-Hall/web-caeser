@@ -16,16 +16,40 @@
 #
 import webapp2
 import caeser
+import cgi
 
+def build_page(textareacontent, rotatedamount):
+            rot_label = "<label>Rotate by:</label>"
+            rotation_input = "<input type='number' name='rotation' value='"+ rotatedamount +"'/>"
+
+            message_label = "<label>Type a message:</label>"
+            textarea = "<textarea name='message'>" + textareacontent +"</textarea>"
+            submit = "<input type='submit'/>"
+            form = ("<form method='post'>" +
+            rot_label + rotation_input + "<br>" + "<br>" + message_label + textarea + "<br>"
+            + submit +"</form>")
+
+            header = "<h1>Web Caeser</h1>"
+
+            return header + form
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        message = 'Hello'
-        encrypted_message = caeser.encrypt(message,13)
+        content = build_page("", "")
+        self.response.write(content)
 
-        textarea = "<textarea>" + encrypted_message + "</textarea>"
-        submit = "<input type='submit'/>"
-        form = "<form>"+ textarea + "<br>" + submit +"</form>"
-        self.response.write(form)
+    def post(self):
+        message = str(self.request.get("message"))
+        rotation = self.request.get("rotation")
+
+        if len(rotation) < 0 or rotation.isdigit() != True:
+            rotation = 0
+        else:
+            rotation = int(rotation)
+
+        encrypted_message = caeser.encrypt(message, rotation)
+        escaped_message = cgi.escape(encrypted_message)
+        content = build_page(escaped_message, str(rotation))
+        self.response.write(content)
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
